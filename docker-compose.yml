@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: nginx.docker
+    container_name: symfony_jwt-nginx
+    volumes:
+      - ./public:/app
+    depends_on:
+      - php-fpm
+    ports:
+      - "8080:80"
+    networks:
+      - symfony_jwt-network
+  php-fpm:
+    build:
+      context: ./docker
+      dockerfile: php-fpm.docker
+      args:
+        - X_DEBUG_REMOTE_HOST=${X_DEBUG_REMOTE_HOST}
+        - X_DEBUG_PROFILER_ENABLE=${X_DEBUG_PROFILER_ENABLE}
+    container_name: symfony_jwt-php-fpm
+    volumes:
+      - ./:/app
+    networks:
+      - symfony_jwt-network
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - db-data:/var/lib/mysql:rw
+    networks:
+      - symfony_jwt-network
+
+volumes:
+  db-data:
+
+networks:
+  symfony_jwt-network:
